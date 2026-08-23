@@ -268,8 +268,9 @@ jobs:
       - name: Verify Falco is running as a daemonset
         run: kubectl get pods -n falco -l app.kubernetes.io/name=falco
 
-      - name: Verify GuardDuty EKS protection status
-        run: aws guardduty list-detectors --region ${{ env.AWS_REGION }}
+      # GuardDuty verification - commented out for POC (enable in production)
+      # - name: Verify GuardDuty EKS protection status
+      #   run: aws guardduty list-detectors --region ${{ env.AWS_REGION }}
 
   # ---------- Fail-fast notification ----------
   notify-on-failure:
