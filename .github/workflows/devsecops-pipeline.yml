@@ -58,6 +58,10 @@ jobs:
     name: 2. Docker Lint + SCA
     needs: secret-scan
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
     steps:
       - uses: actions/checkout@v4
       - name: Hadolint - Dockerfile best-practice lint
@@ -75,7 +79,7 @@ jobs:
           output: 'trivy-results.sarif'
           
       - name: Upload Trivy scan results
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: 'trivy-results.sarif'
@@ -265,23 +269,23 @@ jobs:
       - name: Verify GuardDuty EKS protection status
         run: aws guardduty list-detectors --region ${{ env.AWS_REGION }}
 
-  # ---------- Fail-fast notification ----------
-  notify-on-failure:
-    name: Notify on Pipeline Failure
-    needs: [secret-scan, lint-and-sca, sast-scan, build-and-push, deploy, dast-scan, runtime-security-check]
-    if: failure()
-    runs-on: ubuntu-latest
-    steps:
-      - name: Send failure email
-        uses: dawidd6/action-send-mail@v3
-        with:
-          server_address: smtp.gmail.com
-          server_port: 465
-          username: ${{ secrets.MAIL_USERNAME }}
-          password: ${{ secrets.MAIL_PASSWORD }}
-          subject: "Pipeline failed: ${{ github.repository }}"
-          to: ${{ secrets.NOTIFY_EMAIL }}
-          from: GitHub Actions
-          body: |
-            The DevSecOps pipeline failed at commit ${{ github.sha }}.
-            View run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+  # ---------- Fail-fast notification (DISABLED until email secrets are configured) ----------
+  # notify-on-failure:
+  #   name: Notify on Pipeline Failure
+  #   needs: [secret-scan, lint-and-sca, sast-scan, build-and-push, deploy, dast-scan, runtime-security-check]
+  #   if: failure()
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Send failure email
+  #       uses: dawidd6/action-send-mail@v3
+  #       with:
+  #         server_address: smtp.gmail.com
+  #         server_port: 465
+  #         username: ${{ secrets.MAIL_USERNAME }}
+  #         password: ${{ secrets.MAIL_PASSWORD }}
+  #         subject: "Pipeline failed: ${{ github.repository }}"
+  #         to: ${{ secrets.NOTIFY_EMAIL }}
+  #         from: GitHub Actions
+  #         body: |
+  #           The DevSecOps pipeline failed at commit ${{ github.sha }}.
+  #           View run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
