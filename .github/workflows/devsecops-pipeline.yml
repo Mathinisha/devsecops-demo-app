@@ -19,7 +19,7 @@ env:
   CODEARTIFACT_DOMAIN: devsecops-demo-domain
   CODEARTIFACT_REPO: npm-repo
   IMAGE_TAG: ${{ github.sha }}
-  AWS_ACCOUNT_ID: "123456789012"          # <-- Replace with your actual 12-digit AWS account ID
+  AWS_ACCOUNT_ID: "088585194665"          # <-- Replace with your actual 12-digit AWS account ID
   OIDC_ROLE_NAME: github-actions-oidc-role
 
 jobs:
