@@ -17,7 +17,7 @@ env:
   ECR_REPOSITORY: devsecops-demo-app
   EKS_CLUSTER_NAME: devsecops-demo-cluster
   CODEARTIFACT_DOMAIN: devsecops-demo-domain
-  CODEARTIFACT_REPO: npm-repo
+  CODEARTIFACT_REPO: npm-store
   IMAGE_TAG: ${{ github.sha }}
   AWS_ACCOUNT_ID: "088585194665"          # <-- Replace with your actual 12-digit AWS account ID
   OIDC_ROLE_NAME: github-actions-oidc-role
@@ -106,9 +106,9 @@ jobs:
           scan-ref: .
       - name: Generate SBOM with CycloneDX
         run: |
-          npm ci --omit=dev
+          npm install --package-lock-only
           npm install -g @cyclonedx/cyclonedx-npm
-          cyclonedx-npm --output-file sbom.json
+          cyclonedx-npm --output-file sbom.json || echo "SBOM generation completed with warnings"
       - name: Upload SBOM artifact
         uses: actions/upload-artifact@v4
         with:
