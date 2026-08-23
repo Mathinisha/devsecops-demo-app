@@ -1,0 +1,14 @@
+{
+  "name": "devsecops-demo-app",
+  "version": "1.0.0",
+  "description": "Sample Node.js app used to test an end-to-end DevSecOps CI/CD pipeline",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "test": "echo \"no unit tests defined yet\" && exit 0"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
