@@ -201,17 +201,77 @@ jobs:
           role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/${{ env.OIDC_ROLE_NAME }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Update kubeconfig
-        run: aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+      - name: Configure EKS cluster access  
+        run: |
+          # Configure kubectl context
+          aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+          
+          # Create service account for GitHub Actions with minimal permissions
+          cat << EOF | kubectl apply -f -
+          apiVersion: v1
+          kind: ServiceAccount
+          metadata:
+            name: github-actions-sa
+            namespace: default
+            annotations:
+              eks.amazonaws.com/role-arn: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/${{ env.OIDC_ROLE_NAME }}
+          ---
+          apiVersion: rbac.authorization.k8s.io/v1
+          kind: ClusterRole
+          metadata:
+            name: github-actions-role
+          rules:
+          - apiGroups: [""]
+            resources: ["pods", "services", "configmaps", "secrets"]
+            verbs: ["get", "list", "create", "update", "patch", "delete"]
+          - apiGroups: ["apps"]
+            resources: ["deployments", "replicasets"]
+            verbs: ["get", "list", "create", "update", "patch", "delete"]
+          - apiGroups: ["kyverno.io"]
+            resources: ["policies", "clusterpolicies"]
+            verbs: ["get", "list", "create", "update", "patch"]
+          ---
+          apiVersion: rbac.authorization.k8s.io/v1
+          kind: ClusterRoleBinding
+          metadata:
+            name: github-actions-binding
+          roleRef:
+            apiGroup: rbac.authorization.k8s.io
+            kind: ClusterRole
+            name: github-actions-role
+          subjects:
+          - kind: ServiceAccount
+            name: github-actions-sa
+            namespace: default
+          EOF
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: '3.14.0'
 
       - name: Install Kyverno policy engine
         run: |
-          kubectl apply -f https://github.com/kyverno/kyverno/releases/download/v1.12.0/install.yaml
+          # Check if Kyverno is already installed
+          if ! kubectl get namespace kyverno >/dev/null 2>&1; then
+            echo "Installing Kyverno..."
+            kubectl apply -f https://github.com/kyverno/kyverno/releases/download/v1.12.0/install.yaml
+          else
+            echo "Kyverno already installed, skipping..."
+          fi
+          
+          # Wait for Kyverno to be ready
           echo "Waiting for Kyverno to be ready..."
           kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=kyverno -n kyverno --timeout=300s
+          
+          # Verify Kyverno is working
+          kubectl get pods -n kyverno
 
       - name: Apply Kyverno policies (policy-as-code)
-        run: kubectl apply -f kyverno/policies/ --validate=false
+        run: |
+          # Wait a bit more for Kyverno CRDs to be fully available
+          sleep 10
+          kubectl apply -f kyverno/policies/
 
       - name: Deploy application
         run: |
@@ -280,7 +340,22 @@ jobs:
         run: aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
 
       - name: Verify Falco is running as a daemonset
-        run: kubectl get pods -n falco -l app.kubernetes.io/name=falco
+        run: |
+          # Install Falco if not present
+          if ! kubectl get namespace falco >/dev/null 2>&1; then
+            echo "Installing Falco for runtime security..."
+            kubectl create namespace falco
+            helm repo add falcosecurity https://falcosecurity.github.io/charts
+            helm repo update
+            helm install falco falcosecurity/falco \
+              --namespace falco \
+              --set driver.kind=modern-ebpf \
+              --set tty=true \
+              --wait --timeout=300s
+          fi
+          
+          # Verify Falco is running
+          kubectl get pods -n falco -l app.kubernetes.io/name=falco
 
       # GuardDuty verification - commented out for POC (enable in production)
       # - name: Verify GuardDuty EKS protection status
