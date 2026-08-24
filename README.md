@@ -204,3 +204,4 @@ eksctl delete cluster --name devsecops-demo-cluster --region ap-south-1
 aws ecr delete-repository --repository-name devsecops-demo-app --force --region ap-south-1
 aws codeartifact delete-domain --domain devsecops-demo-domain
 ```
+# EKS permissions configured
