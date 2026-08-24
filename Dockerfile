@@ -6,7 +6,7 @@ RUN npm install --only=production
 
 # --- Stage 2: final runtime image ---
 FROM node:22-alpine3.21
-RUN apk update && apk upgrade && apk add --no-cache dumb-init
+RUN apk update && apk upgrade && apk add --no-cache dumb-init~=1.2
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 WORKDIR /app
 COPY --from=builder /app/node_modules ./node_modules
