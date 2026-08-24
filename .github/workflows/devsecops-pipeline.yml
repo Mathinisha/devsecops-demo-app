@@ -18,6 +18,7 @@ env:
   EKS_CLUSTER_NAME: devsecops-demo-cluster
   CODEARTIFACT_DOMAIN: devsecops-demo-domain
   CODEARTIFACT_REPO: npm-store
+  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
   IMAGE_TAG: ${{ github.sha }}
   AWS_ACCOUNT_ID: "088585194665"          # <-- Replace with your actual 12-digit AWS account ID
   OIDC_ROLE_NAME: github-actions-oidc-role
