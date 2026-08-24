@@ -2,7 +2,7 @@
 FROM node:20.15.1-alpine3.20 AS builder
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci --omit=dev
+RUN npm install --only=production
 
 # --- Stage 2: final runtime image ---
 FROM node:20.15.1-alpine3.20
