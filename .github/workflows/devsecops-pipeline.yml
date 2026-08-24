@@ -204,8 +204,14 @@ jobs:
       - name: Update kubeconfig
         run: aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
 
+      - name: Install Kyverno policy engine
+        run: |
+          kubectl apply -f https://github.com/kyverno/kyverno/releases/download/v1.12.0/install.yaml
+          echo "Waiting for Kyverno to be ready..."
+          kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=kyverno -n kyverno --timeout=300s
+
       - name: Apply Kyverno policies (policy-as-code)
-        run: kubectl apply -f kyverno/policies/
+        run: kubectl apply -f kyverno/policies/ --validate=false
 
       - name: Deploy application
         run: |
