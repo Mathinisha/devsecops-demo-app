@@ -510,6 +510,8 @@ jobs:
         uses: zaproxy/action-baseline@v0.12.0
         with:
           target: ${{ steps.get-url.outputs.url }}
+          fail_action: false
+          allow_issue_writing: false
 
   runtime-security-check:
     name: "7. Runtime Security Verification"
