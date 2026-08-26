@@ -284,6 +284,13 @@ spec:
         any:
           - resources:
               kinds: ["Pod"]
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - kube-system
+                - kyverno
+                - falco
       validate:
         message: "Containers must set securityContext.runAsNonRoot: true."
         pattern:
