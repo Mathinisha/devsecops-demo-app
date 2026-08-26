@@ -723,7 +723,7 @@ kubectl apply -f kyverno/policies/
 # Falco — the "Runtime Security Scan" daemonset in your diagram
 helm repo add falcosecurity https://falcosecurity.github.io/charts
 helm repo update
-helm install falco falcosecurity/falco -n falco --create-namespace --set driver.kind=ebpf
+helm install falco falcosecurity/falco -n falco --create-namespace --set driver.type=ebpf
 ```
 *(There's no AWS Console button for installing these Kubernetes applications — Kyverno, Kyverno Policies, and Falco are cluster-level, one-time bootstrap configurations. They are manually set up once on your EKS cluster using the terminal, separating infrastructure setup from application deployment. Once set up, the application CI/CD pipeline deploys code to the cluster and automatically validates the runtime status of these components.)*
 

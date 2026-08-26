@@ -148,7 +148,7 @@ helm install kyverno kyverno/kyverno -n kyverno --create-namespace
 helm repo add falcosecurity https://falcosecurity.github.io/charts
 helm repo update
 helm install falco falcosecurity/falco -n falco --create-namespace \
-  --set driver.kind=ebpf
+  --set driver.type=ebpf
 ```
 
 ## Step 7 — Enable GuardDuty EKS Protection
