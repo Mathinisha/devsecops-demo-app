@@ -205,6 +205,7 @@ spec:
             - containerPort: 3000
           securityContext:
             runAsNonRoot: true
+            runAsUser: 1000
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
             capabilities:
