@@ -209,75 +209,17 @@ jobs:
           # Configure kubectl context
           aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
           
-          # Test basic connectivity first
-          kubectl auth can-i get pods --as=system:admin || echo "Basic auth test failed, proceeding with setup"
-          
-          # Use eksctl to properly configure cluster access (most reliable method)
-          if ! command -v eksctl &> /dev/null; then
-            echo "Installing eksctl..."
-            curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_Linux_amd64.tar.gz" | tar xz -C /tmp
-            sudo mv /tmp/eksctl /usr/local/bin
-          fi
-          
-          # Add IAM role mapping using eksctl (handles all validation properly)
-          eksctl create iamidentitymapping \
-            --cluster ${{ env.EKS_CLUSTER_NAME }} \
-            --region ${{ env.AWS_REGION }} \
-            --arn arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/${{ env.OIDC_ROLE_NAME }} \
-            --group system:masters \
-            --username github-actions \
-            --no-duplicate-arns || echo "IAM mapping already exists or failed - continuing"
-          
-          # Verify access
-          kubectl auth can-i '*' '*' --as=github-actions
-
-      - name: Install Helm
-        uses: azure/setup-helm@v4
-        with:
-          version: '3.14.0'
-
-      - name: Install Kyverno policy engine
-        run: |
-          # Set kubectl to skip validation for all operations
-          export KUBECTL_VALIDATE=false
-          
-          # Check if Kyverno is already installed
-          if ! kubectl get namespace kyverno --ignore-not-found >/dev/null 2>&1; then
-            echo "Installing Kyverno..."
-            # Use --validate=false to bypass API validation issues
-            kubectl apply -f https://github.com/kyverno/kyverno/releases/download/v1.12.0/install.yaml --validate=false --server-side=true
-          else
-            echo "Kyverno already installed, skipping..."
-          fi
-          
-          # Wait for Kyverno to be ready with extended timeout
-          echo "Waiting for Kyverno to be ready (this may take a few minutes)..."
-          kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=kyverno -n kyverno --timeout=600s || echo "Kyverno pods may still be starting..."
-          
-          # Wait for Kyverno admission controller to be ready
-          sleep 30
-          
-          # Verify Kyverno is working
-          kubectl get pods -n kyverno
-          kubectl get validatingwebhookconfigurations | grep kyverno || echo "Kyverno webhooks not ready yet"
-
-      - name: Apply Kyverno policies (policy-as-code)
-        run: |
-          # Wait for Kyverno CRDs to be fully available
-          echo "Waiting for Kyverno CRDs to be available..."
-          kubectl wait --for condition=established --timeout=300s crd/policies.kyverno.io || echo "CRD not fully ready"
-          
-          # Apply policies with validation disabled and server-side apply
-          kubectl apply -f kyverno/policies/ --validate=false --server-side=true || echo "Some policies may have failed to apply"
+          # Verify connection and cluster permissions
+          kubectl auth can-i get pods
 
       - name: Deploy application
         run: |
           # Replace image placeholder with actual ECR image
           sed -i "s|IMAGE_PLACEHOLDER|${{ needs.build-and-push.outputs.image }}|g" k8s/deployment.yaml
           
-          # Apply deployments with validation disabled
-          kubectl apply -f k8s/deployment.yaml --validate=false
-          kubectl apply -f k8s/service.yaml --validate=false
+          # Apply deployments
+          kubectl apply -f k8s/deployment.yaml
+          kubectl apply -f k8s/service.yaml
           
           # Wait for deployment to be ready
           kubectl rollout status deployment/devsecops-demo-app --timeout=300s
@@ -359,23 +301,9 @@ jobs:
 
       - name: Verify Falco is running as a daemonset
         run: |
-          # Install Falco if not present
-          if ! kubectl get namespace falco --ignore-not-found >/dev/null 2>&1; then
-            echo "Installing Falco for runtime security..."
-            kubectl create namespace falco --validate=false || echo "Namespace may already exist"
-            
-            # Install Falco using kubectl (simpler than Helm for CI/CD)
-            kubectl apply -f https://raw.githubusercontent.com/falcosecurity/falco/master/deploy/kubernetes/falco-daemonset-configmap.yaml --validate=false
-            kubectl apply -f https://raw.githubusercontent.com/falcosecurity/falco/master/deploy/kubernetes/falco-account.yaml --validate=false  
-            kubectl apply -f https://raw.githubusercontent.com/falcosecurity/falco/master/deploy/kubernetes/falco-daemonset.yaml --validate=false
-            
-            echo "Waiting for Falco to be ready..."
-            sleep 60  # Give Falco time to initialize
-          fi
-          
-          # Verify Falco is running (don't fail if not ready)
-          kubectl get pods -n falco -l app=falco || echo "Falco may still be starting..."
+          # Verify Falco daemonset status on the cluster
           kubectl get daemonset -n falco || echo "Falco daemonset not found"
+          kubectl get pods -n falco -l app=falco || echo "Falco pods not found or still starting..."
 
       # GuardDuty verification - commented out for POC (enable in production)
       # - name: Verify GuardDuty EKS protection status
