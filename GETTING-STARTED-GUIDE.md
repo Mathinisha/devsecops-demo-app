@@ -507,7 +507,7 @@ jobs:
           echo "url=http://$HOSTNAME" >> "$GITHUB_OUTPUT"
 
       - name: OWASP ZAP baseline scan
-        uses: zaproxy/action-baseline@v0.12.0
+        uses: zaproxy/action-baseline@v0.15.0
         with:
           target: ${{ steps.get-url.outputs.url }}
           fail_action: false
