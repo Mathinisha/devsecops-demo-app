@@ -1,5 +1,5 @@
 # --- Stage 1: build dependencies ---
-FROM node:22-alpine3.21 AS builder
+FROM node:14
 WORKDIR /app
 COPY package*.json ./
 RUN npm install --only=production
