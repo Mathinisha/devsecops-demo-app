@@ -42,20 +42,8 @@ jobs:
       - name: Scan full history for AWS keys and secrets
         run: |
           git secrets --register-aws
-          # git-secrets returns exit code 1 when no secrets found (success case)
-          # exit code 2+ means actual error
-          if git secrets --scan-history; then
-            echo "✅ No secrets found - scan passed"
-          else
-            EXIT_CODE=$?
-            if [ $EXIT_CODE -eq 1 ]; then
-              echo "✅ No secrets found - scan passed"
-              exit 0
-            else
-              echo "❌ Error running git-secrets scan"
-              exit $EXIT_CODE
-            fi
-          fi
+          echo "Scanning commit history for hardcoded credentials..."
+          git secrets --scan-history
 
   # ---------- STAGE 2: Lint & SCA ----------
   lint-and-sca:
