@@ -198,6 +198,10 @@ spec:
       labels:
         app: devsecops-demo-app
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
       containers:
         - name: devsecops-demo-app
           image: IMAGE_PLACEHOLDER
