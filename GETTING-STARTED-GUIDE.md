@@ -587,6 +587,7 @@ at the top of your diagram.
    - `AmazonEC2ContainerRegistryFullAccess`
    - `AWSCodeArtifactAdminAccess`
    - `AmazonEKSClusterPolicy`
+   - `AmazonGuardDutyReadOnlyAccess`
 6. Role name (exact): `github-actions-oidc-role` → **Create role**
 7. Open the role → **Trust relationships** tab → **Edit trust policy** →
    replace everything with (swap in your real account ID and GitHub username):

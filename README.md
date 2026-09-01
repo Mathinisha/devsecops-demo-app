@@ -79,6 +79,8 @@ aws iam attach-role-policy --role-name github-actions-oidc-role \
   --policy-arn arn:aws:iam::aws:policy/AWSCodeArtifactAdminAccess
 aws iam attach-role-policy --role-name github-actions-oidc-role \
   --policy-arn arn:aws:iam::aws:policy/AmazonEKSClusterPolicy
+aws iam attach-role-policy --role-name github-actions-oidc-role \
+  --policy-arn arn:aws:iam::aws:policy/AmazonGuardDutyReadOnlyAccess
 ```
 
 Copy this role's ARN into `AWS_ACCOUNT_ID` and `OIDC_ROLE_NAME` in

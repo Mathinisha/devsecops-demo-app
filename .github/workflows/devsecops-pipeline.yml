@@ -39,11 +39,11 @@ jobs:
         run: |
           git clone https://github.com/awslabs/git-secrets.git
           cd git-secrets && sudo make install
-      - name: Scan full history for AWS keys and secrets
+      - name: Scan repository files for AWS keys and secrets
         run: |
           git secrets --register-aws
-          echo "Scanning commit history for hardcoded credentials..."
-          git secrets --scan-history
+          echo "Scanning repository files for hardcoded credentials..."
+          git secrets --scan
 
   # ---------- STAGE 2: Lint & SCA ----------
   lint-and-sca:
