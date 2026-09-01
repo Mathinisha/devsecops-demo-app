@@ -536,9 +536,8 @@ jobs:
           kubectl get daemonset -n falco || echo "Falco daemonset not found"
           kubectl get pods -n falco -l app=falco || echo "Falco pods not found or still starting..."
 
-      # GuardDuty verification - commented out for POC (enable in production)
-      # - name: Verify GuardDuty EKS protection status
-      #   run: aws guardduty list-detectors --region ${{ env.AWS_REGION }}
+      - name: Verify GuardDuty EKS protection status
+        run: aws guardduty list-detectors --region ${{ env.AWS_REGION }}
 
   notify-on-failure:
     name: "Fail-fast: Notify on Pipeline Failure"
