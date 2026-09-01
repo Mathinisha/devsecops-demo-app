@@ -83,10 +83,18 @@ jobs:
     name: 3. SAST, IaC scan & SBOM
     needs: lint-and-sca
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/${{ env.OIDC_ROLE_NAME }}
+          aws-region: ${{ env.AWS_REGION }}
       - name: SonarQube static analysis
         uses: SonarSource/sonarqube-scan-action@v3
         env:
@@ -109,6 +117,9 @@ jobs:
         with:
           name: sbom
           path: sbom.json
+      - name: Upload SBOM artifact to Amazon S3
+        run: |
+          aws s3 cp sbom.json s3://devsecops-sbom-archive-088585194665/sbom-${{ github.sha }}.json || echo "S3 upload warning"
 
   # ---------- STAGE 4: Build, Sign & Push to ECR ----------
   build-and-push:

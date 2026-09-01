@@ -5,7 +5,7 @@ COPY package*.json ./
 RUN npm install --only=production
 
 # --- Stage 2: final runtime image ---
-FROM node:22-alpine3.21
+FROM node:18-alpine
 RUN apk update && apk upgrade && apk add --no-cache dumb-init~=1.2
 # npm/npx/corepack are only needed to install packages, never to run this app —
 # removing them also removes their bundled deps, which is exactly what Trivy flagged
