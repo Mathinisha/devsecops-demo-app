@@ -96,6 +96,8 @@ jobs:
         with:
           scan-type: config
           scan-ref: .
+          exit-code: 1
+          severity: CRITICAL,HIGH
       - name: Generate SBOM with CycloneDX
         run: |
           npm install --package-lock-only
