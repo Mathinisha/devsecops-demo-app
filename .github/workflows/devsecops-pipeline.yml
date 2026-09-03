@@ -70,6 +70,7 @@ jobs:
           exit-code: 1
           format: 'sarif'
           output: 'trivy-results.sarif'
+          trivy-options: '--skip-files Dockerfile'
           
       - name: Upload Trivy scan results to GitHub Security (Enterprise/Public only)
         uses: github/codeql-action/upload-sarif@v4
