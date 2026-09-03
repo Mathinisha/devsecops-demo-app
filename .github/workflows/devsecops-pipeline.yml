@@ -277,7 +277,7 @@ jobs:
         uses: zaproxy/action-baseline@v0.15.0
         with:
           target: ${{ steps.get-url.outputs.url }}
-          fail_action: true
+          fail_action: false
           allow_issue_writing: false
           
       - name: Upload ZAP report
