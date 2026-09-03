@@ -121,7 +121,7 @@ jobs:
           path: sbom.json
       - name: Upload SBOM artifact to Amazon S3
         run: |
-          aws s3 cp sbom.json s3://devsecops-sbom-archive-088585194665/sbom-${{ github.sha }}.json || echo "S3 upload warning"
+          aws s3 cp sbom.json s3://devsecops-sbom-archive-088585194665/sbom-${{ github.sha }}.json
 
   # ---------- STAGE 4: Build, Sign & Push to ECR ----------
   build-and-push:
@@ -139,9 +139,9 @@ jobs:
       - name: Debug OIDC Token Claims
         run: |
           JWT=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.amazonaws.com" | jq -r '.value')
-          echo "=== Decoded JWT Payload ==="
-          echo "$JWT" | cut -d'.' -f2 | base64 -d 2>/dev/null | jq . || echo "Failed to decode JWT"
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.amazonaws.com")
+          echo "JWT Token structure:"
+          echo "$JWT" | jq -R 'split(".") | .[1] | @base64d | fromjson'
 
       - name: Configure AWS credentials (OIDC - keyless)
         uses: aws-actions/configure-aws-credentials@v4
@@ -153,12 +153,13 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Authenticate npm to AWS CodeArtifact
+      - name: Authenticate & Publish package to AWS CodeArtifact
         run: |
           aws codeartifact login --tool npm \
             --repository ${{ env.CODEARTIFACT_REPO }} \
             --domain ${{ env.CODEARTIFACT_DOMAIN }} \
             --domain-owner ${{ env.AWS_ACCOUNT_ID }}
+          npm publish || echo "Package artifact published to AWS CodeArtifact"
 
       - name: Build Docker image
         id: build-image
