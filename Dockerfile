@@ -6,9 +6,11 @@ RUN npm install --only=production
 
 # --- Stage 2: final runtime image ---
 FROM node:14-buster
+RUN groupadd -r appgroup && useradd -r -g appgroup appuser
 WORKDIR /app
 COPY --from=builder /app/node_modules ./node_modules
 COPY app.js ./
 COPY package*.json ./
+USER appuser
 EXPOSE 3000
 CMD ["node", "app.js"]
