@@ -5,12 +5,16 @@ COPY package*.json ./
 RUN npm install --only=production
 
 # --- Stage 2: final runtime image ---
-FROM node:14-buster
-RUN groupadd -r appgroup && useradd -r -g appgroup appuser
+FROM node:22-alpine3.21
+RUN apk update && apk upgrade && apk add --no-cache dumb-init~=1.2
+RUN rm -rf /usr/local/lib/node_modules/npm \
+    /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 WORKDIR /app
 COPY --from=builder /app/node_modules ./node_modules
 COPY app.js ./
 COPY package*.json ./
 USER appuser
 EXPOSE 3000
+ENTRYPOINT ["dumb-init", "--"]
 CMD ["node", "app.js"]
