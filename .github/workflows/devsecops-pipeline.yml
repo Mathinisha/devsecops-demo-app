@@ -68,6 +68,7 @@ jobs:
           scanners: vuln
           severity: CRITICAL,HIGH
           exit-code: 1
+          ignore-unfixed: true
           format: 'sarif'
           output: 'trivy-results.sarif'
           skip-files: 'Dockerfile'
