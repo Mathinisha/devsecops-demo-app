@@ -111,9 +111,7 @@ jobs:
           severity: CRITICAL,HIGH
       - name: Generate SBOM with CycloneDX
         run: |
-          npm install --package-lock-only
-          npm install -g @cyclonedx/cyclonedx-npm
-          cyclonedx-npm --output-file sbom.json || echo "SBOM generation completed with warnings"
+          npx -y @cyclonedx/cyclonedx-npm --output-format JSON --output-file sbom.json --ignore-npm-errors
       - name: Upload SBOM artifact
         uses: actions/upload-artifact@v4
         with:
